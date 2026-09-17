@@ -2257,7 +2257,21 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
     ThrottledInterval::new(i)
 }
 
+/// eMuhasebe: varsayilan guvenlik ayarlari (upstream'in imzali custom-client
+/// sistemine ihtiyac duymadan dogrudan derleme zamaninda gomulur).
+/// - approve-mode=password: tikla-kabul-et kapali, sabit sifre olmadan baglanti kurulamaz.
+/// - verification-method=use-permanent-password: gecici (one-time) sifre kullanilmaz.
+fn apply_emuhasebe_default_settings() {
+    let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
+    defaults.insert("approve-mode".to_owned(), "password".to_owned());
+    defaults.insert(
+        "verification-method".to_owned(),
+        "use-permanent-password".to_owned(),
+    );
+}
+
 pub fn load_custom_client() {
+    apply_emuhasebe_default_settings();
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
         read_custom_client(data.trim());
