@@ -2208,7 +2208,15 @@ pub fn create_symmetric_key_msg(their_pk_b: [u8; 32]) -> (Bytes, Bytes, secretbo
 
 #[inline]
 pub fn using_public_server() -> bool {
-    crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()
+    // eMuhasebe: derleme zamaninda RENDEZVOUS_SERVERS sabit kodla kendi
+    // sunucumuza (176.53.96.113) baglandigimiz icin bu kontrol her zaman
+    // false donmeli — "daha hizli baglanti icin kendi sunucunuzu kurun"
+    // uyarisi anlamsiz, biz zaten kendi sunucumuzu kullaniyoruz.
+    // Orijinal kontrol (custom-rendezvous-server / PROD_RENDEZVOUS_SERVER)
+    // yalnizca calisma zamaninda kullanici tarafindan girilen veya sunucudan
+    // gelen bir config string ile dolan degiskenlere bakiyordu, bizim derleme
+    // zamani sabit kodumuzu hic görmuyordu.
+    false
 }
 
 pub struct ThrottledInterval {
