@@ -2257,17 +2257,35 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
     ThrottledInterval::new(i)
 }
 
-/// eMuhasebe: varsayilan guvenlik ayarlari (upstream'in imzali custom-client
-/// sistemine ihtiyac duymadan dogrudan derleme zamaninda gomulur).
-/// - approve-mode=password: tikla-kabul-et kapali, sabit sifre olmadan baglanti kurulamaz.
-/// - verification-method=use-permanent-password: gecici (one-time) sifre kullanilmaz.
+/// eMuhasebe: varsayilan ayarlar (upstream'in imzali custom-client sistemine
+/// ihtiyac duymadan dogrudan derleme zamaninda gomulur).
+///
+/// Guvenlik modeli — approve-mode = "click":
+/// - Sifre dogru/yanlis/bos ne olursa olsun, sunucu HER baglanti denemesinde
+///   once musterinin ekraninda onay penceresi acar (bkz. connection.rs:2976,
+///   ApproveMode::Click kontrolu password::has_valid_password() FARK ETMEKSIZIN
+///   devreye giriyor). Musteri "kabul et" demeden baglanti KURULMAZ.
+/// - verification-method upstream varsayilaninda (UseBothPasswords) kaliyor:
+///   gecici (one-time) sifre arka planda aktif ve her basarili oturum sonunda
+///   otomatik yenilenir (bkz. connection.rs update_temporary_password). Bu
+///   sifre artik zorunlu bir kapi degil — asil kapi musterinin tiklamasi.
+/// - Sabit/kalici sifre KULLANILMIYOR: sizinti/unutma riski yok, cunku zaten
+///   sifre olmadan da onay penceresi cikip musterinin onayi gerekiyor.
 fn apply_emuhasebe_default_settings() {
-    let mut defaults = config::DEFAULT_SETTINGS.write().unwrap();
-    defaults.insert("approve-mode".to_owned(), "password".to_owned());
-    defaults.insert(
-        "verification-method".to_owned(),
-        "use-permanent-password".to_owned(),
-    );
+    config::DEFAULT_SETTINGS
+        .write()
+        .unwrap()
+        .insert("approve-mode".to_owned(), "click".to_owned());
+
+    // "lang" bir local setting oldugu icin DEFAULT_SETTINGS degil
+    // DEFAULT_LOCAL_SETTINGS'e yaziliyor (bkz. LocalConfig::get_option ->
+    // DEFAULT_LOCAL_SETTINGS fallback). Kullanici Ayarlar->Genel->Dil'den
+    // baska bir dil secerse bu deger ezilir, yalnizca hic secim yapilmamis
+    // ilk acilista devreye girer.
+    config::DEFAULT_LOCAL_SETTINGS
+        .write()
+        .unwrap()
+        .insert("lang".to_owned(), "tr".to_owned());
 }
 
 pub fn load_custom_client() {
